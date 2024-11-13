@@ -2,14 +2,16 @@
 <odoo noupdate="1">
     
     <record id="payment_provider_visanet" model="payment.provider">
-        <field name="name">VisaNet</field>
+        <field name="name">NeoNet</field>
+        <field name="display_as">Credit Card (powered by NeoNet)</field>
         <field name="image_128"
                type="base64"
                file="payment_visanet/static/src/img/visanet_icon.png"/>
         <field name="module_id" ref="base.module_payment_visanet"/>
-        <field name="payment_method_ids"
+        <field name="payment_icon_ids"
                eval="[(6, 0, [
-                   ref('payment_visanet.payment_method_visanet'),
+                   ref('payment.payment_icon_cc_mastercard'),
+                   ref('payment.payment_icon_cc_visa'),
                ])]"/>
         <field name="code">visanet</field>
         <field name="redirect_form_view_id" ref="redirect_form"/>

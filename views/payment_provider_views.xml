@@ -7,7 +7,7 @@
         <field name="inherit_id" ref="payment.payment_provider_form"/>
         <field name="arch" type="xml">
             <group name="provider_credentials" position='inside'>
-                <group invisible="code != 'visanet'">
+                <group attrs="{'invisible': [('code', '!=', 'visanet')]}">
                     <field name="visanet_profile_id"/>
                     <field name="visanet_access_key"/>
                     <field name="visanet_secret_key"/>

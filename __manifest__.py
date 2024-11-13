@@ -12,7 +12,6 @@
     'data': [
         'views/payment_provider_views.xml',
         'views/payment_visanet_templates.xml',
-        'data/payment_method_data.xml',
         'data/payment_provider_data.xml',
     ],
     'images': ['static/description/icon.png'],
