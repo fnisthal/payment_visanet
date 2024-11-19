@@ -7,12 +7,6 @@
         <field name="sequence">1</field>
         <field name="image" type="base64" file="payment_visanet/static/description/icon.png"/>
         <field name="active">True</field>
-        <field name="brand_ids"
-               eval="[Command.set([
-                         ref('payment.payment_method_visa'),
-                         ref('payment.payment_method_mastercard'),
-                     ])]"
-        />
     </record>
 
 </odoo>
