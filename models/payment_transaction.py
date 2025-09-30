@@ -45,6 +45,21 @@ class PaymentTransaction(models.Model):
         key = bytes(self.provider_id.visanet_secret_key, 'utf-8')
         message = bytes(','.join(signed_string), 'utf-8')
 
+        if self.partner_id.country_id and self.partner_id.country_id.code == 'US' and self.partner_id.state_id and self.partner_id.state_id.code:
+            # Para EE. UU., usar el código de estado (2 letras)
+            visanet_partner_state = self.partner_id.state_id.code[:2].upper()
+        elif self.partner_id.state_id and self.partner_id.state_id.code:
+            # Otros países: si el estado tiene código, truncar a 2 y mayúsculas
+            visanet_partner_state = self.partner_id.state_id.code[:2].upper()
+        elif self.partner_id.country_id and self.partner_id.country_id.code:
+            # Sin estado: usar el código de país si existe
+            visanet_partner_state = self.partner_id.country_id.code[:2].upper()
+        elif self.partner_id.country_id and self.partner_id.country_id.name:
+            # Último recurso: primeras 2 letras del nombre del país
+            visanet_partner_state = self.partner_id.country_id.name[:2].upper()
+        else:
+            visanet_partner_state = 'AA'  # Valor por defecto si no hay información
+
         rendering_values = {
             'api_url': self.provider_id._visanet_get_api_url(),
             'visanet_access_key': self.provider_id.visanet_access_key,
@@ -62,7 +77,8 @@ class PaymentTransaction(models.Model):
             'visanet_partner_email': self.partner_id.email,
             'visanet_partner_postal_code': self.partner_id.zip,
             'visanet_partner_city': self.partner_id.city,
-            'visanet_partner_state': self.partner_id.state_id.code,
+            #'visanet_partner_state': self.partner_id.state_id.code,
+            'visanet_partner_state': visanet_partner_state,
             'visanet_partner_country': self.partner_id.country_id.code,
             'visanet_partner_phone': self.partner_id.phone,
             'visanet_partner_address1': visanet_partner_address1,
