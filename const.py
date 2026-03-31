@@ -1,8 +1,21 @@
-# The codes of the payment methods to activate when VisaNet is activated.
-DEFAULT_PAYMENT_METHODS_CODES = [
-    # Primary payment methods.
+DEFAULT_PAYMENT_METHOD_CODES = [
     'card',
-    # Brand payment methods.
-    'visa',
-    'mastercard',
+]
+
+PAYMENT_METHODS_MAPPING = {
+    'card': '001',
+    'card': '002',
+}
+
+STATUS_CODES_MAPPING = {
+    'pending': ['REVIEW'],
+    'done': ['ACCEPT'],
+    'cancel': ['CANCEL'],
+    'refused': ['DECLINE'],
+    'error': ['ERROR'],
+}
+
+SUPPORTED_CURRENCIES = [
+    'GTQ',
+    'USD',
 ]

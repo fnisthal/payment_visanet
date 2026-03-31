@@ -14,14 +14,14 @@ class VisaNetController(http.Controller):
     _return_url = '/payment/visanet/return'
 
     @http.route(['/payment/visanet/return'], type='http', auth='public', csrf=False, save_session=False)
-    def visanet_return(self, **data):
+    def visanet_return(self, **raw_data):
         """ Process the data returned by VisaNet after redirection.
 
         :param dict data: The feedback data
         """
-        if data:
-            _logger.info('VisaNet: entering _handle_feedback_data with post data %s', pprint.pformat(data))  # debug
-            tx_sudo = request.env['payment.transaction'].sudo()._get_tx_from_notification_data('visanet', data)
-            tx_sudo._handle_notification_data('visanet', data)
+        if raw_data:
+            _logger.info("handling redirection from VisaNet with data:\n%s", pprint.pformat(raw_data))
+            tx_sudo = request.env['payment.transaction'].sudo()._search_by_reference('visanet', raw_data)
+            tx_sudo._process('visanet', raw_data)
 
         return request.redirect('/payment/status')

@@ -4,7 +4,7 @@
     'name': 'VisaNet Payment Provider',
     'category': 'Accounting/Payment Providers',
     'summary': 'Payment Provider: VisaNet Implementation',
-    'version': '2.1',
+    'version': '3.0',
     'description': """VisaNet Payment Provider""",
     'author': 'aquíH',
     'website': 'http://aquih.com/',
@@ -12,7 +12,6 @@
     'data': [
         'views/payment_provider_views.xml',
         'views/payment_visanet_templates.xml',
-        'data/payment_method_data.xml',
         'data/payment_provider_data.xml',
     ],
     'images': ['static/description/icon.png'],

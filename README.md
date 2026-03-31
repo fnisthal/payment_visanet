@@ -1,6 +1,6 @@
 # payment_visanet
 
-Funciona con versión 17.0 de Odoo
+Funciona con versión 19.0 de Odoo
 
 Es necesario activar lo siguiente:
 https://ebc2test.cybersource.com/ebc2/app/PaymentConfiguration/SecureAcceptanceSettings

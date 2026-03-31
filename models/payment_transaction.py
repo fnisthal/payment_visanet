@@ -11,6 +11,7 @@ from odoo import api, fields, models, _
 from odoo.exceptions import ValidationError
 
 from odoo.addons.payment_visanet.controllers.payment import VisaNetController
+from odoo.addons.payment_visanet import const
 
 _logger = logging.getLogger(__name__)
 
@@ -26,7 +27,7 @@ class PaymentTransaction(models.Model):
         
         return_url = urls.url_join(self.provider_id.get_base_url(), VisaNetController._return_url)
         reference = self.reference
-        transaction_date = fields.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
+        transaction_date = fields.Datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
         transaction_uuid = uuid.uuid4().hex
         unsigned_field_names = 'bill_to_forename,bill_to_surname,bill_to_email,bill_to_address_line1,bill_to_address_line2,bill_to_address_postal_code,bill_to_address_city,bill_to_address_state,bill_to_address_country,bill_to_phone'
         language = 'es-es'
@@ -39,7 +40,7 @@ class PaymentTransaction(models.Model):
 
         signed_string = []
         for i in range(len(signed_field_names)):
-            signed_string.append(signed_field_names[i]+"="+str(signed_field_values[i]))
+            signed_string.append(signed_field_names[i]+'='+str(signed_field_values[i]))
 
         key = bytes(self.provider_id.visanet_secret_key, 'utf-8')
         message = bytes(','.join(signed_string), 'utf-8')
@@ -71,49 +72,57 @@ class PaymentTransaction(models.Model):
             'visanet_signature': base64.b64encode(hmac.new(key, message, digestmod=hashlib.sha256).digest()).decode("utf-8"),
         }
         return rendering_values
-
+    
     @api.model
-    def _get_tx_from_notification_data(self, provider_code, notification_data):
-        tx = super()._get_tx_from_notification_data(provider_code, notification_data)
+    def _extract_reference(self, provider_code, payment_data):
         if provider_code != 'visanet':
-            return tx
-        
-        reference = notification_data.get('req_reference_number')
-        if not reference:
-            error_msg = _('VisaNet: received data with missing reference (%s)') % (reference)
-            _logger.info(error_msg)
-            raise ValidationError(error_msg)
+            return super()._extract_reference(provider_code, payment_data)
 
-        tx = self.search([('reference', '=', reference), ('provider_code', '=', 'visanet')])
-        _logger.info(tx)
+        return payment_data.get('req_reference_number')
 
+    def _extract_amount_data(self, payment_data):
+        if self.provider_code != 'visanet':
+            return super()._extract_amount_data(payment_data)
+
+        amount = payment_data.get('auth_amount')
+        currency_code = payment_data.get('req_currency')
+        return {
+            'amount': float(amount),
+            'currency_code': currency_code,
+        }
+
+    def _apply_updates(self, payment_data):
+        if self.provider_code != 'visanet':
+            return super()._apply_updates(payment_data)
+
+        # Update the provider reference.
+        self.provider_reference = payment_data.get('transaction_id')
+
+        # Update the payment method.
+        payment_method_code = payment_data.get('req_card_type')
         payment_method = self.env['payment.method']._get_from_code(
-            'visanet'
+            payment_method_code, mapping=const.PAYMENT_METHODS_MAPPING
         )
         self.payment_method_id = payment_method or self.payment_method_id
 
-        if not tx or len(tx) > 1:
-            error_msg = _('VisaNet: received data for reference %s') % (reference)
-            if not tx:
-                error_msg += _('; no order found')
-            else:
-                error_msg += _('; multiple orders found')
-            _logger.info(error_msg)
-            raise ValidationError(error_msg)
-
-        return tx
-
-    def _process_notification_data(self, notification_data):
-        super()._process_notification_data(notification_data)
-        if self.provider_code != 'visanet':
-            return
-        
-        self.provider_reference = notification_data.get('req_reference_number')
-
-        status_code = notification_data.get('decision', 'ERROR')
-        if status_code == 'ACCEPT':
+        # Update the payment payment_data.
+        status_code = payment_data.get('decision', 'ERROR')
+        if status_code in const.STATUS_CODES_MAPPING['pending']:
+            self._set_pending()
+        elif status_code in const.STATUS_CODES_MAPPING['done']:
             self._set_done()
+        elif status_code in const.STATUS_CODES_MAPPING['cancel']:
+            self._set_canceled()
+        elif status_code in const.STATUS_CODES_MAPPING['refused']:
+            self._set_error("Su pago fue rechazado (code %s). Por favor intente de nuevo.", status_code)
+        elif status_code in const.STATUS_CODES_MAPPING['error']:
+            self._set_error(
+                "Ocurrio un error al procesar su pago (code %s). Por favor intente de nuevo.",
+                status_code,
+            )
         else:
-            error = 'VisaNet: error '+notification_data.get('message')
-            _logger.info(error)
-            self._set_error(_("Your payment was refused (code %s). Please try again.", status_code))
+            _logger.warning(
+                "Datos invalidos en la decision (%s) para la transaccion %s.",
+                status_code, self.reference
+            )
+            self._set_error(_("Decision invalida: %s.", status_code))

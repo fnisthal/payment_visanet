@@ -23,9 +23,16 @@ class PaymentProvider(models.Model):
         else:
             return "https://testsecureacceptance.cybersource.com/pay"
 
+    def _get_supported_currencies(self):
+        self.ensure_one()
+        if self.code == 'visanet':
+           return super()._get_supported_currencies().filtered(
+                lambda c: c.name in const.SUPPORTED_CURRENCIES
+            )
+        return super()._get_supported_currencies()
+
     def _get_default_payment_method_codes(self):
-        """ Override of `payment` to return the default payment method codes. """
-        default_codes = super()._get_default_payment_method_codes()
-        if self.code != 'migo':
-            return default_codes
-        return const.DEFAULT_PAYMENT_METHODS_CODES
+        self.ensure_one()
+        if self.code == 'visanet':
+            return const.DEFAULT_PAYMENT_METHOD_CODES
+        return super()._get_default_payment_method_codes()
