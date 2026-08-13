@@ -25,7 +25,7 @@
             <input type="hidden" name="bill_to_address_city" t-att-value="visanet_partner_city"/>
             <input type="hidden" name="bill_to_address_state" t-att-value="visanet_partner_state"/>
             <input type="hidden" name="bill_to_address_country" t-att-value="visanet_partner_country"/>
-            <input type="hidden" name="bill_to_phone" t-att-value="partner_phone.zfill(6) if partner_phone else ''"/>
+            <input type="hidden" name="bill_to_phone" t-att-value="visanet_partner_phone.zfill(6) if visanet_partner_phone else ''"/>
         </form>
     </template>
 
