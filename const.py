@@ -1,10 +1,14 @@
-DEFAULT_PAYMENT_METHOD_CODES = [
+DEFAULT_PAYMENT_METHOD_CODES = {
     'card',
-]
+    'visa',
+    'mastercard',
+}
 
 PAYMENT_METHODS_MAPPING = {
-    'card': '001',
-    'card': '002',
+    'visa': '001',
+    'mastercard': '002',
+    # Cybersource also uses '003' for Amex and '004' for Discover.
+    # This VisaNet merchant account only accepts Visa and Mastercard.
 }
 
 STATUS_CODES_MAPPING = {
